@@ -1,3 +1,5 @@
+AWS project utilizing Lambda, DynamoDB, and API Gateway.
+
 Checklist:
 
 - Create a new serverless project with python.
