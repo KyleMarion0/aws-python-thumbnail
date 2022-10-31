@@ -18,14 +18,15 @@ def s3_thumbnail_generator(event, context):
     key = event['Records'][0]['s3']['object']['key']
     img_size = event['Records'][0]['s3']['object']['size']
 
+    #Only create a thumbnail for non thumbnails pictures.
     if (not key.endswith("_thumbnail.png")):
-
+        #Get image.
         image = get_s3_image(bucket, key)
-
+        #Resize image.
         thumbnail = image_to_thumbnail(image)
-
+        #Get new file name.
         thumbnail_key = new_filename(key)
-
+        #Upload new file.
         url = upload_to_s3(bucket, thumbnail_key, thumbnail, img_size)
         return url
 
@@ -42,12 +43,12 @@ def image_to_thumbnail(image):
 
 def new_filename(key):
     key_split = key.rsplit('.', 1)
-    return key_split[0] + "_thumbnail.jpg"
+    return key_split[0] + "_thumbnail.png"
 
 def upload_to_s3(bucket, key, image, img_size):
-
+    #Save image into BytesIO object to avoid writing to disk.
     out_thumbnail = BytesIO()
-
+    #Specify file type.
     image.save(out_thumbnail, 'PNG')
     out_thumbnail.seek(0)
 
@@ -62,6 +63,8 @@ def upload_to_s3(bucket, key, image, img_size):
 
     url = '{}/{}/{}'.format(s3.meta.endpoint_url, bucket, key)
 
+    #Save image url to DynamoDB.
+    s3_save_thumbnail_url_to_dynamo(url_path=url, img_size=img_size)
     return url
 
 def s3_save_thumbnail_url_to_dynamo(url_path, img_size):
